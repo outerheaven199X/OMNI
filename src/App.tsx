@@ -12,6 +12,7 @@ import {
   fetchNhcCurrentStorms,
   type NhcStorm,
 } from "./lib/api";
+import WireMap from "./components/WireMap";
 
 function Section({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
@@ -60,6 +61,7 @@ export default function App() {
   const [storms, setStorms] = useState<NhcStorm[] | null>(null);
   const [news, setNews] = useState<GdeltArticle[] | null>(null);
   const [loading, setLoading] = useState<"idle" | "both" | "done">("idle");
+  const [rightTab, setRightTab] = useState<"globe" | "map">("globe");
   const [buildId] = useState(() => new Date().toISOString());
 
   async function onSearch(e: React.FormEvent) {
@@ -213,8 +215,8 @@ export default function App() {
                     <div className="font-semibold">{new Date(d).toLocaleDateString([], { weekday: "short" })}</div>
                     <div className="opacity-70">H {Math.round(wx.tmax[i])}°</div>
                     <div className="opacity-70">L {Math.round(wx.tmin[i])}°</div>
-                    <div className="opacity-70">{codeToIcon(wx.code[i])}</div>
-                    <div className="opacity-50">{wx.precip[i] ? `${Math.round(wx.precip[i])}mm` : "—"}</div>
+                    <div className="opacity-80">{codeToIcon(wx.code[i])}</div>
+                    <div className="opacity-60">{wx.precip[i] ? `${Math.round(wx.precip[i])} mm` : "—"}</div>
                   </div>
                 ))}
               </div>
@@ -260,6 +262,17 @@ export default function App() {
                     {a.headline && <div className="text-xs">{a.headline}</div>}
                     {a.description && <div className="mt-1 text-[11px] opacity-70 line-clamp-3">{a.description}</div>}
                     {a.instruction && <div className="mt-1 text-[11px] opacity-90">{a.instruction}</div>}
+                    <div className="mt-1 text-[11px]">
+                      <a
+                        className="underline"
+                        href={`https://www.weather.gov/`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Open NWS"
+                      >
+                        source: NWS
+                      </a>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -267,11 +280,31 @@ export default function App() {
           </Section>
         </div>
 
-        {/* RIGHT — clamped globe */}
+        {/* RIGHT — globe / wiremap tabs */}
         <div className="flex flex-col items-center gap-3">
           <div className="rounded-2xl border border-black/20 bg-white p-4 shadow-sm">
-            <div className="max-w-[560px] min-w-[420px]">
-              <WireframeEarth size={520} />
+            <div className="mb-3 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setRightTab("globe")}
+                className={`rounded border px-2 py-1 text-xs ${rightTab === "globe" ? "bg-black text-white" : "bg-white"}`}
+              >
+                GLOBE
+              </button>
+              <button
+                onClick={() => setRightTab("map")}
+                className={`rounded border px-2 py-1 text-xs ${rightTab === "map" ? "bg-black text-white" : "bg-white"}`}
+              >
+                WIREMAP
+              </button>
+            </div>
+            <div className="grid place-items-center">
+              {rightTab === "globe" ? (
+                <div className="max-w-[560px] min-w-[420px]">
+                  <WireframeEarth size={520} />
+                </div>
+              ) : (
+                <WireMap lat={coords.lat} lon={coords.lon} />
+              )}
             </div>
           </div>
           <div className="text-center text-xs opacity-70">lat {coords.lat.toFixed(4)} / lon {coords.lon.toFixed(4)}</div>
