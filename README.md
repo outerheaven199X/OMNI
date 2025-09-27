@@ -1,73 +1,98 @@
-# React + TypeScript + Vite
+# 🌤️ Weather & Air Quality Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A terminal-style React application that displays current weather, 5-day forecasts, and air quality data for any city worldwide. Built with TypeScript, React Query, and a monospace terminal aesthetic.
 
-Currently, two official plugins are available:
+## 🛠 Built With
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** + **TypeScript** + **Vite** - Modern frontend stack
+- **TanStack React Query** - Efficient data fetching and caching
+- **Tailwind CSS** - Utility-first styling with terminal theme
+- **Zod** - Runtime type validation and schema parsing
+- **OpenWeatherMap API** - Weather data and forecasts
+- **OpenAQ API** - Global air quality measurements
 
-## React Compiler
+## 🚀 Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# Clone the repository
+git clone https://github.com/outerheaven199X/OMNI.git
+cd OMNI
 
-## Expanding the ESLint configuration
+# Install dependencies
+npm install
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local and add your OpenWeatherMap API key
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🎮 Usage
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Development
+npm run dev
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Linting
+npm run lint
 ```
+
+Visit `http://localhost:5173` to see the application.
+
+## ✨ Features
+
+- **Current Weather Display** - Temperature, humidity, wind speed, and conditions
+- **5-Day Forecast** - Daily high/low temperatures with weather icons
+- **Air Quality Index** - PM2.5, PM10, O3, NO2, SO2, and CO measurements
+- **Interactive US Heatmap** - Visual representation of air quality across states
+- **Terminal UI** - Monospace font with green-on-black terminal styling
+- **Real-time Data** - Powered by OpenWeatherMap and OpenAQ APIs
+
+## 🔧 Configuration
+
+Create `.env.local` with your API keys:
+
+```env
+VITE_OWM_API_KEY=your_openweathermap_api_key_here
+```
+
+### Getting API Keys
+
+1. **OpenWeatherMap**: Sign up at [openweathermap.org](https://openweathermap.org) for free weather data
+2. **OpenAQ**: No API key required - free air quality data
+
+## 🧪 Testing
+
+```bash
+npm test
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Make changes following the coding guidelines
+4. Add tests for new functionality
+5. Run the test suite: `npm test`
+6. Commit with descriptive messages
+7. Push to your fork and submit a pull request
+
+## 📜 License
+
+This project is open source and available under the MIT License.
+
+## 🗺 Roadmap
+
+- [ ] Add more detailed weather maps
+- [ ] Implement weather alerts and notifications
+- [ ] Add historical weather data visualization
+- [ ] Support for multiple languages
+- [ ] Mobile-responsive design improvements
