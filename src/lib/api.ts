@@ -115,7 +115,7 @@ export async function fetchGdeltNews(city: string): Promise<GdeltArticle[]> {
   if (!r.ok) return [];
   const j = await r.json();
   const arts = Array.isArray(j?.articles) ? j.articles : [];
-  return arts.map((a: any) => ({
+  return arts.map((a: { title: string; url: string; domain: string; language: string; seendate: string }) => ({
     title: a.title,
     url: a.url,
     domain: a.domain,
@@ -131,7 +131,7 @@ export async function fetchNwsAlerts(lat: number, lon: number): Promise<NwsAlert
   if (!r.ok) return [];
   const j = await r.json();
   const feats = Array.isArray(j?.features) ? j.features : [];
-  return feats.map((f: any) => {
+  return feats.map((f: { id?: string; properties?: { id?: string; event?: string; headline?: string; severity?: string; onset?: string; ends?: string; description?: string; instruction?: string } }) => {
     const p = f?.properties || {};
     return {
       id: f?.id || p?.id || cryptoRandom(),
@@ -155,13 +155,13 @@ export async function fetchNhcCurrentStorms(): Promise<NhcStorm[]> {
     if (!r.ok) return [];
     const j = await r.json();
     const list = Array.isArray(j) ? j : Array.isArray(j?.storms) ? j.storms : [];
-    return list.map((s: any, i: number) => ({
+    return list.map((s: { id?: string; name?: string; stormName?: string; basin?: string; basinId?: string; advisory?: string; advisoryNumber?: string; lat?: number | string; lon?: number | string; status?: string; stormType?: string }, i: number) => ({
       id: s?.id || String(i),
       name: s?.name || s?.stormName || "Storm",
       basin: s?.basin || s?.basinId || "ATL/EPAC",
       advisory: s?.advisory || s?.advisoryNumber,
-      lat: typeof s?.lat === "number" ? s.lat : parseFloat(s?.lat),
-      lon: typeof s?.lon === "number" ? s.lon : parseFloat(s?.lon),
+      lat: typeof s?.lat === "number" ? s.lat : parseFloat(s?.lat || "0"),
+      lon: typeof s?.lon === "number" ? s.lon : parseFloat(s?.lon || "0"),
       status: s?.status || s?.stormType,
     }));
   } catch {

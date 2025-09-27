@@ -1,5 +1,5 @@
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { Map } from "maplibre-gl";
+import { Map } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
 export default function WireMap({ lat, lon }: { lat: number; lon: number }) {
@@ -7,7 +7,7 @@ export default function WireMap({ lat, lon }: { lat: number; lon: number }) {
 
   useEffect(() => {
     if (!ref.current) return;
-    const key = (import.meta as any).env?.VITE_MAPTILER_KEY as string;
+    const key = (import.meta as { env?: { VITE_MAPTILER_KEY?: string } }).env?.VITE_MAPTILER_KEY;
     const map = new Map({
       container: ref.current,
       center: [lon, lat],

@@ -69,7 +69,7 @@ export default function App() {
     const q = query.trim();
     if (!q) return;
     try {
-      const key = (import.meta as any).env?.VITE_MAPTILER_KEY;
+      const key = (import.meta as { env?: { VITE_MAPTILER_KEY?: string } }).env?.VITE_MAPTILER_KEY;
       const res = await fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json?key=${key}&limit=1`);
       const data = await res.json();
       const f = data?.features?.[0];
