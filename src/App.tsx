@@ -303,7 +303,15 @@ export default function App() {
                   <WireframeEarth size={520} />
                 </div>
               ) : (
-                <WireMap lat={coords.lat} lon={coords.lon} />
+                <WireMap 
+                  lat={coords.lat} 
+                  lon={coords.lon} 
+                  storms={storms?.filter(s => s.lat && s.lon).map(s => ({
+                    lat: s.lat!,
+                    lon: s.lon!,
+                    name: s.name
+                  })) || []} 
+                />
               )}
             </div>
           </div>
