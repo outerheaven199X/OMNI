@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OMNI — SANITY PROBE</title>
+    <!-- IBM mono -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FORCE Tailwind CDN (bypass PostCSS issues) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { theme: { extend: {} } }
+    </script>
+    <style>
+      /* ULTRA OBVIOUS outline so we can tell instantly if THIS file is served */
+      html, body { border: 8px solid #000; }
+      #sanity-probe {
+        position: fixed; z-index: 9999; left: 8px; top: 8px;
+        background: #000; color: #fff; padding: 4px 8px;
+        font-family: "IBM Plex Mono", monospace; font-size: 12px; border-radius: 4px;
+      }
+    </style>
+    <meta name="build-id" content="BUILD::<%= Date.now ? Date.now() : '' %>">
+  </head>
+  <body class="bg-white text-black">
+    <div id="sanity-probe">SANITY PROBE • index.html is LIVE</div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

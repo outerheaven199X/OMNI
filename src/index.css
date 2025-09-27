@@ -1,0 +1,10 @@
+:root { --dot-color: rgba(0,0,0,0.6); }
+* { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+.dot-matrix {
+  background:
+    radial-gradient(var(--dot-color) 1px, transparent 1.5px) 0 0/12px 12px,
+    radial-gradient(var(--dot-color) 1px, transparent 1.5px) 6px 6px/12px 12px;
+  opacity: .07;
+}
+@keyframes spin-slower { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+.animate-spin-slower { animation: spin-slower 36s linear infinite; }
