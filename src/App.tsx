@@ -1,4 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  fetchDailyWeather,
+  fetchAirQualityNow,
+  codeToIcon,
+  type DailyWeather,
+  type AirQualityNow,
+  fetchGdeltNews,
+  type GdeltArticle,
+  fetchNwsAlerts,
+  type NwsAlert,
+  fetchNhcCurrentStorms,
+  type NhcStorm,
+} from "./lib/api";
 
 function Section({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
@@ -39,8 +52,14 @@ function WireframeEarth({ size = 520 }: { size?: number }) {
 
 export default function App() {
   const [query, setQuery] = useState("");
-  const [city, setCity]   = useState("CITY");
+  const [city, setCity] = useState("CITY");
   const [coords, setCoords] = useState<{ lat: number; lon: number }>({ lat: 27.7704, lon: -82.6695 });
+  const [wx, setWx] = useState<DailyWeather | null>(null);
+  const [aq, setAq] = useState<AirQualityNow | null>(null);
+  const [alerts, setAlerts] = useState<NwsAlert[] | null>(null);
+  const [storms, setStorms] = useState<NhcStorm[] | null>(null);
+  const [news, setNews] = useState<GdeltArticle[] | null>(null);
+  const [loading, setLoading] = useState<"idle" | "both" | "done">("idle");
   const [buildId] = useState(() => new Date().toISOString());
 
   async function onSearch(e: React.FormEvent) {
@@ -62,6 +81,47 @@ export default function App() {
       setCity(q.toUpperCase());
     }
   }
+
+  // load on coords change
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        setLoading("both");
+        const [w, a, al, st] = await Promise.all([
+          fetchDailyWeather(coords.lat, coords.lon),
+          fetchAirQualityNow(coords.lat, coords.lon),
+          fetchNwsAlerts(coords.lat, coords.lon),
+          fetchNhcCurrentStorms(),
+        ]);
+        if (!cancel) {
+          setWx(w);
+          setAq(a);
+          setAlerts(al);
+          setStorms(st);
+        }
+      } catch {
+        if (!cancel) {
+          setWx(null); setAq(null); setAlerts(null); setStorms(null);
+        }
+      } finally {
+        if (!cancel) setLoading("done");
+      }
+    })();
+    return () => { cancel = true; };
+  }, [coords.lat, coords.lon]);
+
+  // GDELT news by city name
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      if (!city || city === "CITY") { setNews([]); return; }
+      const short = city.split(",")[0]; // strip long "Place, Region"
+      const items = await fetchGdeltNews(short);
+      if (!cancel) setNews(items);
+    })();
+    return () => { cancel = true; };
+  }, [city]);
 
   return (
     <div className="relative min-h-screen bg-white text-black">
@@ -93,46 +153,117 @@ export default function App() {
       <main className="mx-auto grid w-full max-w-[1420px] grid-cols-1 gap-4 px-4 pb-10 pt-4 md:grid-cols-[280px_minmax(0,1fr)_600px]">
         {/* LEFT */}
         <div className="grid content-start gap-4">
-          <Section title="HURRICANE (svg logo)">
-            <div className="h-28 w-full rounded-lg border border-black/20" />
+          <Section title="HURRICANE (active storms)">
+            {storms === null ? (
+              <div className="text-xs opacity-60">loading…</div>
+            ) : storms.length === 0 ? (
+              <div className="text-xs opacity-60">No active storms</div>
+            ) : (
+              <ul className="space-y-1 text-sm">
+                {storms.slice(0, 6).map((s) => (
+                  <li key={s.id} className="flex items-center justify-between rounded border border-black/15 px-2 py-1">
+                    <span className="font-mono text-xs">{s.name}</span>
+                    <span className="text-[11px] opacity-70">{s.status || s.basin}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Section>
-          <Section title="ZIP CODE ENTRY">
+
+          <Section title="ZIP / CITY">
             <div className="text-xs opacity-70">Use the search bar in the header.</div>
           </Section>
-          <Section title="WEATHER NEWS">
-            <ul className="space-y-2 text-sm">
-              <li>• Placeholder headline A</li>
-              <li>• Placeholder headline B</li>
-              <li>• Placeholder headline C</li>
-            </ul>
+
+          <Section title="WEATHER NEWS (GDELT)">
+            {news === null ? (
+              <div className="text-xs opacity-60">loading…</div>
+            ) : news.length === 0 ? (
+              <div className="text-xs opacity-60">No recent local items</div>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                {news.slice(0, 6).map((n) => (
+                  <li key={n.url} className="leading-snug">
+                    <a className="underline hover:no-underline" href={n.url} target="_blank" rel="noreferrer">
+                      {n.title}
+                    </a>
+                    <div className="text-[11px] opacity-60">{n.domain} • {new Date(n.seendate).toLocaleString()}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Section>
+
           <Section title="GLOBAL AVERAGE TEMP">
             <div className="text-3xl font-bold">+1.27°C</div>
-            <div className="text-xs opacity-60">vs 1991–2020 baseline</div>
+            <div className="text-xs opacity-60">vs 1991–2020 baseline (static placeholder)</div>
           </Section>
         </div>
 
         {/* CENTER */}
         <div className="grid content-start gap-4">
           <Section title={`${city} — CURRENT / 5-DAY`}>
-            <div className="grid grid-cols-5 gap-2 text-center text-xs font-mono">
-              {["D1","D2","D3","D4","D5"].map(d => (
-                <div key={d} className="rounded-lg border border-black/20 p-2">
-                  <div className="font-semibold">{d}</div>
-                  <div className="opacity-70">H 26°</div>
-                  <div className="opacity-70">L 18°</div>
-                  <div className="opacity-70">CLD</div>
-                </div>
-              ))}
-            </div>
+            {loading === "idle" && !wx ? (
+              <div className="p-4 text-center text-xs opacity-60">enter a city or zip</div>
+            ) : !wx ? (
+              <div className="p-4 text-center text-xs opacity-60">loading…</div>
+            ) : (
+              <div className="grid grid-cols-5 gap-2 text-center text-xs font-mono">
+                {wx.date.slice(0, 5).map((d, i) => (
+                  <div key={d} className="rounded-lg border border-black/20 p-2">
+                    <div className="font-semibold">{new Date(d).toLocaleDateString([], { weekday: "short" })}</div>
+                    <div className="opacity-70">H {Math.round(wx.tmax[i])}°</div>
+                    <div className="opacity-70">L {Math.round(wx.tmin[i])}°</div>
+                    <div className="opacity-70">{codeToIcon(wx.code[i])}</div>
+                    <div className="opacity-50">{wx.precip[i] ? `${Math.round(wx.precip[i])}mm` : "—"}</div>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="mt-3 text-xs opacity-60">lat {coords.lat.toFixed(4)} / lon {coords.lon.toFixed(4)}</div>
           </Section>
-          <Section title="LOCAL WEATHER / EMERGENCY NEWS">
-            <ul className="space-y-2 text-sm">
-              <li>• County advisory placeholder</li>
-              <li>• FEMA PSA placeholder</li>
-              <li>• Utility notice placeholder</li>
-            </ul>
+
+          <Section title="AIR QUALITY — NOW">
+            {!aq ? (
+              <div className="p-4 text-center text-xs opacity-60">loading…</div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+                {[
+                  ["AQI", aq.aqi !== null ? String(Math.round(aq.aqi)) : "—"],
+                  ["PM2.5", aq.pm25 !== null ? `${Math.round(aq.pm25)} µg/m³` : "—"],
+                  ["PM10", aq.pm10 !== null ? `${Math.round(aq.pm10)} µg/m³` : "—"],
+                  ["O₃", aq.o3 !== null ? `${Math.round(aq.o3)} µg/m³` : "—"],
+                  ["NO₂", aq.no2 !== null ? `${Math.round(aq.no2)} µg/m³` : "—"],
+                  ["SO₂", aq.so2 !== null ? `${Math.round(aq.so2)} µg/m³` : "—"],
+                ].map(([k, v]) => (
+                  <div key={k as string} className="rounded-lg border border-black/20 p-3 text-center">
+                    <div className="font-semibold">{k}</div>
+                    <div className="opacity-70">{v as string}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Section>
+
+          <Section title="LOCAL WEATHER / EMERGENCY ALERTS (NWS)">
+            {alerts === null ? (
+              <div className="p-4 text-center text-xs opacity-60">loading…</div>
+            ) : alerts.length === 0 ? (
+              <div className="p-4 text-center text-xs opacity-60">No active alerts for this location</div>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                {alerts.slice(0, 6).map((a) => (
+                  <li key={a.id} className="rounded border border-black/20 p-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-semibold">{a.event}</span>
+                      {a.severity && <span className="text-[11px] opacity-70">{a.severity}</span>}
+                    </div>
+                    {a.headline && <div className="text-xs">{a.headline}</div>}
+                    {a.description && <div className="mt-1 text-[11px] opacity-70 line-clamp-3">{a.description}</div>}
+                    {a.instruction && <div className="mt-1 text-[11px] opacity-90">{a.instruction}</div>}
+                  </li>
+                ))}
+              </ul>
+            )}
           </Section>
         </div>
 
