@@ -1,5 +1,7 @@
 # 🌤️ OMNI - Weather & Air Quality Dashboard
 
+![](https://i.imgur.com/LNZyTSi.png)
+
 A comprehensive terminal-style React application that displays current weather, 5-day forecasts, air quality data, and environmental monitoring for any city worldwide. Built with TypeScript, React Query, and a monospace terminal aesthetic.
 
 **🚧 Project Status: 30% Complete - Active Development**
