@@ -10,6 +10,13 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
   useEffect(() => {
     if (!ref.current) return;
     const key = (import.meta as { env?: { VITE_MAPTILER_KEY?: string } }).env?.VITE_MAPTILER_KEY;
+    if (!key) {
+      ref.current.innerHTML =
+        '<div style="display:grid;place-items:center;height:520px;width:520px;border:1px solid #000;border-radius:9999px">\
+           <div style="font:12px/1.3 IBM Plex Mono,monospace;text-align:center">MapTiler key missing<br/><code>VITE_MAPTILER_KEY</code></div>\
+         </div>';
+      return;
+    }
     const map = new Map({
       container: ref.current,
       center: [lon, lat],
@@ -122,12 +129,14 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
       
       if (map.getSource('storms')) {
         const source = map.getSource('storms') as maplibregl.GeoJSONSource;
-        const data = source._data as { features: Array<{ properties: { name: string; pulse?: number } }> };
+        const data = source._data as { features: Array<{ properties?: { name: string; pulse?: number } }> };
         if (data && data.features) {
           data.features.forEach((feature) => {
-            feature.properties.pulse = pulseValue;
+            if (feature.properties) {
+              feature.properties.pulse = pulseValue;
+            }
           });
-          source.setData(data);
+          source.setData(data as maplibregl.GeoJSONSource['_data']);
         }
       }
       

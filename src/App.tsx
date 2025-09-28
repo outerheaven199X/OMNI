@@ -27,17 +27,12 @@ function WireframeEarth({ size = 520 }: { size?: number }) {
   const longs = useMemo(() => Array.from({ length: 10 }, (_, i) => (i * 180) / 10 - 90), []);
   const lats  = useMemo(() => Array.from({ length: 6 },  (_, i) => (i * 180) / 7  - 90), []);
   return (
-    <div className="relative mx-auto overflow-hidden rounded-full border border-black/30 bg-white"
+    <div className="relative mx-auto overflow-hidden rounded-full border border-black/80 bg-white"
          style={{ width: size, height: size }}>
       <svg viewBox="0 0 100 100" className="h-full w-full animate-spin-slower" style={{ transformOrigin: "50% 50%" }}>
-        <defs>
-          <radialGradient id="glow" cx="50%" cy="50%">
-            <stop offset="75%" stopColor="black" stopOpacity="0.035" />
-            <stop offset="100%" stopColor="black" stopOpacity="0.11" />
-          </radialGradient>
-        </defs>
-        <circle cx="50" cy="50" r="48" fill="url(#glow)" stroke="black" strokeOpacity=".15" />
-        <g fill="none" stroke="black" strokeOpacity=".35" strokeWidth=".25">
+        {/* PURE WIREFRAME: no fill/shading */}
+        <circle cx="50" cy="50" r="48" fill="none" stroke="black" strokeOpacity=".7" strokeWidth=".35" />
+        <g fill="none" stroke="black" strokeOpacity=".7" strokeWidth=".25">
           {longs.map((deg) => (
             <ellipse key={`lon-${deg}`} cx="50" cy="50" rx="46" ry="46" transform={`rotate(${deg} 50 50)`} />
           ))}
@@ -64,24 +59,24 @@ export default function App() {
   const [rightTab, setRightTab] = useState<"globe" | "map">("globe");
   const [buildId] = useState(() => new Date().toISOString());
 
+  // use Open-Meteo's free geocoder (no key, good CORS)
   async function onSearch(e: React.FormEvent) {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
     try {
-      const key = (import.meta as { env?: { VITE_MAPTILER_KEY?: string } }).env?.VITE_MAPTILER_KEY;
-      const res = await fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json?key=${key}&limit=1`);
-      const data = await res.json();
-      const f = data?.features?.[0];
-      if (f?.center) {
-        setCity((f.place_name || q).toUpperCase());
-        setCoords({ lat: f.center[1], lon: f.center[0] });
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=en&format=json`;
+      const r = await fetch(url);
+      const j = await r.json();
+      const g = j?.results?.[0];
+      if (g) {
+        const name = [g.name, g.admin1, g.country_code].filter(Boolean).join(", ");
+        setCity(name.toUpperCase());
+        setCoords({ lat: g.latitude, lon: g.longitude });
       } else {
         setCity(q.toUpperCase());
       }
-    } catch {
-      setCity(q.toUpperCase());
-    }
+    } catch { setCity(q.toUpperCase()); }
   }
 
   // load on coords change
@@ -176,7 +171,7 @@ export default function App() {
             <div className="text-xs opacity-70">Use the search bar in the header.</div>
           </Section>
 
-          <Section title="WEATHER NEWS (GDELT)">
+          <Section title={`WEATHER NEWS (GDELT)${city && city !== "CITY" ? "" : " — GLOBAL"}`}>
             {news === null ? (
               <div className="text-xs opacity-60">loading…</div>
             ) : news.length === 0 ? (

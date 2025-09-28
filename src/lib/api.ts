@@ -106,12 +106,12 @@ export function codeToIcon(code: number): string {
 
 // ---------- GDELT 2.1 Docs API (news by city keyword) ----------
 export async function fetchGdeltNews(city: string): Promise<GdeltArticle[]> {
-  if (!city) return [];
-  const q = encodeURIComponent(
-    `("${city}") AND (weather OR hurricane OR storm OR flood OR tornado OR wildfire OR evacuation OR advisory)`
-  );
-  const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${q}&mode=ArtList&format=json&maxrecords=12&sort=datedesc`;
-  const r = await fetch(url);
+  const baseQuery = city
+    ? `("${city}") AND (weather OR hurricane OR storm OR flood OR tornado OR wildfire OR evacuation OR advisory)`
+    : `(weather OR hurricane OR storm OR flood OR tornado OR wildfire OR evacuation OR advisory)`;
+  const q = encodeURIComponent(baseQuery);
+  const url = `/api/gdelt?query=${q}&mode=ArtList&format=json&maxrecords=12&sort=datedesc`;
+  const r = await fetch(url); // proxied → no CORS issues
   if (!r.ok) return [];
   const j = await r.json();
   const arts = Array.isArray(j?.articles) ? j.articles : [];
@@ -148,10 +148,10 @@ export async function fetchNwsAlerts(lat: number, lon: number): Promise<NwsAlert
 
 // ---------- NHC current storms (best-effort) ----------
 export async function fetchNhcCurrentStorms(): Promise<NhcStorm[]> {
-  // Known JSON used by NHC site; if it changes, we just return [] gracefully.
-  const url = "https://www.nhc.noaa.gov/CurrentStorms.json";
+  // proxied to avoid CORS blockers
+  const url = "/api/nhc";
   try {
-    const r = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+    const r = await fetch(url);
     if (!r.ok) return [];
     const j = await r.json();
     const list = Array.isArray(j) ? j : Array.isArray(j?.storms) ? j.storms : [];
