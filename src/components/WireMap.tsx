@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 type StormPoint = { lat: number; lon: number; name: string };
 
-export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: number; storms?: StormPoint[] }) {
+export default function WireMap({ lat, lon, zoom = 9, storms = [] }: { lat: number; lon: number; zoom?: number; storms?: StormPoint[] }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,10 +17,10 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
          </div>';
       return;
     }
-    const map = new Map({
-      container: ref.current,
-      center: [lon, lat],
-      zoom: 9,
+                const map = new Map({
+                  container: ref.current,
+                  center: [lon, lat],
+                  zoom: zoom,
       dragRotate: false,
       pitch: 0,
       style: {
@@ -45,34 +45,40 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
           },
         },
         layers: [
-          { id: "bg", type: "background", paint: { "background-color": "#ffffff" } },
-          // administrative boundaries
+          // Background
+          { id: "bg", type: "background", paint: { "background-color": "#f8f9fa" } },
+          
+          // Water bodies with blue shading (40% opacity)
+          {
+            id: "water-fill",
+            type: "fill",
+            source: "vectiles",
+            "source-layer": "water",
+            paint: { 
+              "fill-color": "rgba(135, 206, 235, 0.4)",
+              "fill-outline-color": "rgba(0, 100, 200, 0.4)"
+            }
+          },
+          
+          // Land areas with subtle green shading (40% opacity)
+          {
+            id: "land-fill",
+            type: "fill",
+            source: "vectiles",
+            "source-layer": "landcover",
+            paint: { 
+              "fill-color": "rgba(34, 139, 34, 0.4)",
+              "fill-outline-color": "rgba(0, 100, 0, 0.4)"
+            }
+          },
+          
+          // State/Administrative boundaries only (no roads)
           {
             id: "boundary",
             type: "line",
             source: "vectiles",
             "source-layer": "boundary",
-            paint: { "line-color": "#000", "line-opacity": 0.55, "line-width": 0.6 }
-          },
-          // roads
-          {
-            id: "roads",
-            type: "line",
-            source: "vectiles",
-            "source-layer": "transportation",
-            paint: {
-              "line-color": "#000",
-              "line-opacity": 0.55,
-              "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.2, 12, 0.6, 15, 1.2]
-            }
-          },
-          // waterways
-          {
-            id: "waterway",
-            type: "line",
-            source: "vectiles",
-            "source-layer": "waterway",
-            paint: { "line-color": "#000", "line-opacity": 0.35, "line-width": 0.5 }
+            paint: { "line-color": "#000", "line-opacity": 0.4, "line-width": 1.0 }
           },
           // storm markers with pulsing effect
           {
@@ -84,20 +90,20 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
                 "interpolate",
                 ["linear"],
                 ["get", "pulse"],
-                0, 8,
-                1, 16
+                0, 10,
+                1, 20
               ],
-              "circle-color": "#ff0000",
+              "circle-color": "#ff4444",
               "circle-opacity": [
                 "interpolate",
                 ["linear"],
                 ["get", "pulse"],
-                0, 0.8,
-                1, 0.2
+                0, 0.7,
+                1, 0.1
               ],
-              "circle-stroke-width": 2,
-              "circle-stroke-color": "#000",
-              "circle-stroke-opacity": 0.6
+              "circle-stroke-width": 3,
+              "circle-stroke-color": "#cc0000",
+              "circle-stroke-opacity": 0.8
             }
           },
           {
@@ -105,9 +111,12 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
             type: "circle",
             source: "storms",
             paint: {
-              "circle-radius": 4,
-              "circle-color": "#000",
-              "circle-opacity": 0.9
+              "circle-radius": 6,
+              "circle-color": "#ff0000",
+              "circle-opacity": 0.9,
+              "circle-stroke-width": 2,
+              "circle-stroke-color": "#000",
+              "circle-stroke-opacity": 1
             }
           }
         ]
@@ -115,10 +124,10 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
       attributionControl: false
     });
 
-    // grid overlay for extra "wire"
+    // grid overlay for extra "wire" aesthetic (40% opacity)
     const overlay = document.createElement("div");
     overlay.style.cssText =
-      "position:absolute;inset:0;background-image:linear-gradient(to right, rgba(0,0,0,.12) 1px, transparent 1px),linear-gradient(to bottom, rgba(0,0,0,.12) 1px, transparent 1px);background-size:40px 40px,40px 40px;pointer-events:none;";
+      "position:absolute;inset:0;background-image:linear-gradient(to right, rgba(0,0,0,.4) 1px, transparent 1px),linear-gradient(to bottom, rgba(0,0,0,.4) 1px, transparent 1px);background-size:30px 30px,30px 30px;pointer-events:none;z-index:1;";
     map.getContainer().appendChild(overlay);
 
     // storm pulsing animation
@@ -129,14 +138,16 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
       
       if (map.getSource('storms')) {
         const source = map.getSource('storms') as maplibregl.GeoJSONSource;
-        const data = source._data as { features: Array<{ properties?: { name: string; pulse?: number } }> };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = source._data as any;
         if (data && data.features) {
-          data.features.forEach((feature) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.features.forEach((feature: any) => {
             if (feature.properties) {
               feature.properties.pulse = pulseValue;
             }
           });
-          source.setData(data as maplibregl.GeoJSONSource['_data']);
+          source.setData(data);
         }
       }
       
@@ -153,7 +164,7 @@ export default function WireMap({ lat, lon, storms = [] }: { lat: number; lon: n
       }
       map.remove();
     };
-  }, [lat, lon, storms]);
+  }, [lat, lon, zoom, storms]);
 
-  return <div ref={ref} className="h-[520px] w-[520px] max-w-full rounded-full border border-black/30 overflow-hidden" />;
+  return <div ref={ref} className="h-[600px] w-[600px] max-w-full rounded-full border border-black/30 overflow-hidden" />;
 }

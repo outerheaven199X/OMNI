@@ -1,10 +1,149 @@
-:root { --dot-color: rgba(0,0,0,0.6); }
-* { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
-.dot-matrix {
-  background:
-    radial-gradient(var(--dot-color) 1px, transparent 1.5px) 0 0/12px 12px,
-    radial-gradient(var(--dot-color) 1px, transparent 1.5px) 6px 6px/12px 12px;
-  opacity: .07;
+/* ANTIMEME STYLE GUIDE IMPLEMENTATION */
+:root { 
+  --dot-color: rgba(0,0,0,0.08);
+  --paper-bg: #fdfdf9;
 }
-@keyframes spin-slower { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-.animate-spin-slower { animation: spin-slower 36s linear infinite; }
+
+* { 
+  font-family: 'Courier New', Courier, monospace; 
+  color: black;
+}
+
+body {
+  background-color: var(--paper-bg);
+}
+
+/* DOT MATRIX PAPER BACKGROUND */
+.dot-matrix {
+  background-color: var(--paper-bg);
+  background-image: 
+    radial-gradient(circle, var(--dot-color) 1px, transparent 1px),
+    radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 3px 3px, 1.5px 1.5px;
+  background-position: 0 0, 1.5px 1.5px;
+}
+
+/* SCAN LINES OVERLAY */
+.dot-matrix::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.015) 2px,
+    rgba(0,0,0,0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* PERFORATION MARKS */
+.dot-matrix::before {
+  content: '';
+  position: fixed;
+  left: 20px;
+  top: 0;
+  height: 100%;
+  width: 1px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 3px,
+    #999 3px,
+    #999 5px,
+    transparent 5px,
+    transparent 10px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ANIMATED SCANLINE */
+@keyframes scan {
+  0% { top: -2px; }
+  100% { top: 100%; }
+}
+
+.scanline {
+  position: fixed;
+  height: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0,0,0,0.1),
+    transparent
+  );
+  animation: scan 12s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* TYPEWRITER CURSOR BLINK */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: black;
+  animation: blink 1s infinite;
+  margin-left: 2px;
+}
+
+/* ANTIMEME TYPOGRAPHY */
+.antimeme-font {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  color: black;
+}
+
+/* BOXED INFO DISPLAY */
+.antimeme-box {
+  border: 1px solid black;
+  padding: 8px 12px;
+  background: white;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+/* HOVER INVERSION */
+.antimeme-button {
+  padding: 8px 15px;
+  border: 1px solid black;
+  background: white;
+  color: black;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.antimeme-button:hover {
+  background: black;
+  color: white;
+}
+
+/* ASCII DIVIDERS */
+.ascii-divider {
+  font-family: 'Courier New', monospace;
+  color: black;
+  text-align: center;
+  margin: 10px 0;
+}
+
+/* GLOBE ANIMATION */
+@keyframes spin-slower { 
+  from { transform: rotate(0deg) } 
+  to { transform: rotate(360deg) } 
+}
+.animate-spin-slower { 
+  animation: spin-slower 36s linear infinite; 
+}
